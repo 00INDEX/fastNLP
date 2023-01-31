@@ -1,10 +1,10 @@
-__all__ = ['Perplexity']
-
-from typing import Any, Union, List
+from typing import Any, Union, List, Optional
 
 import numpy as np
 from fastNLP.core.metrics.backend import Backend
 from fastNLP.core.metrics.metric import Metric
+
+__all__ = ['Perplexity']
 
 
 class Perplexity(Metric):
@@ -27,10 +27,11 @@ class Perplexity(Metric):
     def __init__(self,
                  ignore_labels: Union[int, List[int], None] = None,
                  backend: Union[str, Backend, None] = 'auto',
-                 aggregate_when_get_metric: bool = None,
+                 aggregate_when_get_metric: Optional[bool] = None,
                  **kwargs: Any):
-        super().__init__(backend=backend,
-                         aggregate_when_get_metric=aggregate_when_get_metric)
+        super().__init__(
+            backend=backend,
+            aggregate_when_get_metric=aggregate_when_get_metric)
         self.ignore_labels = None
         if isinstance(ignore_labels, int):
             ignore_labels = [ignore_labels]
@@ -42,14 +43,10 @@ class Perplexity(Metric):
                     )
             self.ignore_labels = list(set(ignore_labels))
 
-        self.register_element(name='total',
-                              value=0.,
-                              aggregate_method='sum',
-                              backend=backend)
-        self.register_element(name='count',
-                              value=0.,
-                              aggregate_method='sum',
-                              backend=backend)
+        self.register_element(
+            name='total', value=0., aggregate_method='sum', backend=backend)
+        self.register_element(
+            name='count', value=0., aggregate_method='sum', backend=backend)
 
     def update(self, pred, target) -> None:
         r"""
@@ -80,8 +77,10 @@ class Perplexity(Metric):
             for ignore_label in self.ignore_labels:
                 mask_temp = np.not_equal(target, ignore_label)
                 mask = (mask == mask_temp)
-            target = np.ma.array(target, mask=(mask == False),
-                                 fill_value=0).filled()
+            target = np.ma.array(
+                target,
+                mask=(mask == False),  # noqa: E712
+                fill_value=0).filled()
             probs = np.take(probs, target, axis=1).diagonal()[mask]
         else:
             probs = np.take(probs, target, axis=1).diagonal()
