@@ -1,4 +1,17 @@
 import os
+import subprocess
+import sys
+from pathlib import Path
+
+path = os.path.abspath(__file__)
+folders = path.split(os.sep)
+for folder in list(folders[::-1]):
+    if 'fastnlp' not in folder.lower():
+        folders.pop(-1)
+    else:
+        break
+path = os.sep.join(folders)
+sys.path.extend([path, os.path.join(path, 'fastNLP')])
 
 import numpy as np
 import pytest
@@ -166,7 +179,22 @@ def test_fastnlp_oneflow_broadcast_object():
         assert int(data) == 0
 
 
-# python -m oneflow.distributed.launch --nproc_per_node 2 test_dist_utils.py
+@pytest.mark.oneflow
+def test_element_dist():
+    r"""分布式的测试"""
+    skip_no_cuda()
+    path = Path(os.path.abspath(__file__)).parent
+    command = [
+        'python',
+        '-m',
+        'oneflow.distributed.launch',
+        '--nproc_per_node',
+        '2',
+        f"{path.joinpath('test_dist_utils.py')}",
+    ]
+    subprocess.check_call(command, env=os.environ)
+
+
 if __name__ == '__main__':
 
-    pytest.main([f'{__file__}'])
+    pytest.main([f'{__file__}', '-m', 'oneflowdist'])

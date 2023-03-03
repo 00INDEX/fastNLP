@@ -1,8 +1,17 @@
 import os
+import subprocess
 import sys
-
-sys.path.append('../../../../')
 from pathlib import Path
+
+path = os.path.abspath(__file__)
+folders = path.split(os.sep)
+for folder in list(folders[::-1]):
+    if 'fastnlp' not in folder.lower():
+        folders.pop(-1)
+    else:
+        break
+path = os.sep.join(folders)
+sys.path.extend([path, os.path.join(path, 'fastNLP')])
 
 import pytest
 
@@ -19,7 +28,7 @@ from tests.helpers.datasets.oneflow_data import (OneflowNormalDataset,
                                                  OneflowNormalXYDataset)
 from tests.helpers.models.oneflow_model import \
     OneflowNormalModel_Classification_1
-from tests.helpers.utils import recover_logger
+from tests.helpers.utils import recover_logger, skip_no_cuda
 
 if _NEED_IMPORT_ONEFLOW:
     import oneflow
@@ -109,7 +118,8 @@ class TestDDPDriverFunction:
         """
         测试 get_no_sync_context 函数
         """
-        res = driver.get_model_no_sync_context()
+        with driver.get_model_no_sync_context()():
+            pass
         comm.barrier()
         """
         测试 is_global_zero 函数
@@ -584,6 +594,11 @@ class TestSaveLoad:
                     break
                 already_seen_x_set.update(batch['x'].reshape(-1, ).tolist())
                 already_seen_y_set.update(batch['y'].reshape(-1, ).tolist())
+                batch = driver1.move_data_to_device(batch)
+                res1 = driver1.model.train_step(**batch)
+                driver1.backward(res1['loss'])
+                driver1.zero_grad()
+                driver1.step()
 
             # 同步
             comm.barrier()
@@ -695,6 +710,11 @@ class TestSaveLoad:
                     break
                 already_seen_x_set.update(batch['x'].reshape(-1, ).tolist())
                 already_seen_y_set.update(batch['y'].reshape(-1, ).tolist())
+                batch = driver1.move_data_to_device(batch)
+                res1 = driver1.model.train_step(**batch)
+                driver1.backward(res1['loss'])
+                driver1.zero_grad()
+                driver1.step()
 
             # 同步
             comm.barrier()
@@ -1009,7 +1029,22 @@ def test_customized_sampler_dataloader(inherit):
         pass
 
 
+@pytest.mark.oneflow
+def test_element_dist():
+    r"""分布式的测试"""
+    skip_no_cuda()
+    path = Path(os.path.abspath(__file__)).parent
+    command = [
+        'python',
+        '-m',
+        'oneflow.distributed.launch',
+        '--nproc_per_node',
+        '2',
+        f"{path.joinpath('test_dist_utils.py')}",
+    ]
+    subprocess.check_call(command, env=os.environ)
+
+
 if __name__ == '__main__':
-    # python -m oneflow.distributed.launch --nproc_per_node 2 test_ddp.py
-    from tests.helpers.utils import run_pytest
-    run_pytest(sys.argv)
+
+    pytest.main([f'{__file__}', '-m', 'oneflowdist'])

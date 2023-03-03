@@ -14,7 +14,7 @@ from typing import (Any, AnyStr, Callable, Dict, List, Mapping, Optional,
                     Sequence, Tuple, Union)
 
 from prettytable import PrettyTable
-
+from fastNLP.envs.env import FASTNLP_LAUNCH_TIME
 from fastNLP.core.log import logger
 
 __all__ = [
@@ -46,6 +46,8 @@ def auto_param_call(fn: Callable,
                     signature_fn: Optional[Callable] = None,
                     mapping: Optional[Dict[AnyStr, AnyStr]] = None) -> Any:
     r"""
+    执行 **参数匹配** 的函数。
+
     该函数会根据输入函数的形参名从 ``*args`` （均为 **dict** 类型）中找到匹配的值进
     行调用，如果传入的数据与 ``fn`` 的形参不匹配，可以通过 ``mapping`` 参数进行转
     换。``mapping`` 参数中的一对 ``(key, value)`` 表示在 ``*args`` 中找到 ``key``
@@ -158,7 +160,7 @@ def auto_param_call(fn: Callable,
 
 
 def _get_keys(args: List[Dict]) -> List[List[str]]:
-    """返回每个 dict 的 keys.
+    """返回每个 dict 的 keys。
 
     :param args:
     :return:
@@ -275,10 +277,10 @@ def match_and_substitute_params(mapping: Optional[Union[Callable,
     用来实现将输入的 **batch** 或者输出的 **outputs** 通过 ``mapping`` 将键值进行
     更换的功能；该函数应用于 ``input_mapping`` 和 ``output_mapping``；
 
-    * 对于 ``input_mapping``，该函数会在 :class:`~fastNLP.core.controllers.
+    * 对于 ``input_mapping``，该函数会在 :class:`~fastNLP.core.controllers.\
       TrainBatchLoop` 中取完数据后立刻被调用；
     * 对于 ``output_mapping``，该函数会在 :class:`~fastNLP.core.Trainer` 的
-      :meth:`~fastNLP.core.Trainer.train_step` 以及 :class:`~fastNLP.core.
+      :meth:`~fastNLP.core.Trainer.train_step` 以及 :class:`~fastNLP.core.\
       Evaluator` 的 :meth:`~fastNLP.core.Evaluator.train_step` 中得到结果后立刻
       被调用；
 
@@ -290,7 +292,7 @@ def match_and_substitute_params(mapping: Optional[Union[Callable,
 
         * 如果 ``data`` 是 **Dict**，那么该函数会将 ``data`` 的 ``key`` 替换为
           **mapping[key]**；
-        * 如果 ``data`` 是 **dataclass**，那么该函数会先使用 :func:`dataclasses.
+        * 如果 ``data`` 是 **dataclass**，那么该函数会先使用 :func:`dataclasses.\
           asdict` 函数将其转换为 **Dict**，然后进行转换；
         * 如果 ``data`` 是 **Sequence**，那么该函数会先将其转换成一个对应的字典::
 
@@ -470,7 +472,7 @@ def sub_column(string: str, c: int, c_size: int, title: str) -> str:
 
     :param string: 要被截断的字符串；
     :param c: 命令行列数；
-    :param c_size: :class:`~fastNLP.core.Instance` 或 :class:`~fastNLP.core.
+    :param c_size: :class:`~fastNLP.core.Instance` 或 :class:`~fastNLP.core.\
         DataSet` 的 ``field`` 数目；
     :param title: 列名；
     :return: 对一个过长的列进行截断的结果；
@@ -500,7 +502,7 @@ def _is_iterable(value):
         return False
 
 
-def pretty_table_printer(dataset_or_ins) -> PrettyTable:
+def pretty_table_printer(container) -> PrettyTable:
     r"""
     用于在 **fastNLP** 中展示数据的函数::
 
@@ -511,8 +513,9 @@ def pretty_table_printer(dataset_or_ins) -> PrettyTable:
         | [1, 1, 1] | [2, 2, 2] | ['a', 'b', 'c'] |
         +-----------+-----------+-----------------+
 
-    :param dataset_or_ins: 要展示的 :class:`~fastNLP.core.DataSet` 或者
-        :class:`~fastNLP.core.Instance` 实例；
+    :param container: 要展示的 :class:`~fastNLP.core.DataSet`、
+        :class:`~fastNLP.core.Instance` 或 :class:`~fastNLP.core.FieldArray`
+        实例；
     :return: 根据命令行大小进行自动截断的数据表格；
     """
     x = PrettyTable()
@@ -524,23 +527,31 @@ def pretty_table_printer(dataset_or_ins) -> PrettyTable:
         column = 144
         row = 11
 
-    if type(dataset_or_ins).__name__ == 'DataSet':
-        x.field_names = list(dataset_or_ins.field_arrays.keys())
+    if type(container).__name__ == 'DataSet':
+        x.field_names = list(container.field_arrays.keys())
         c_size = len(x.field_names)
-        for ins in dataset_or_ins:
+        for ins in container:
             x.add_row(
                 [sub_column(ins[k], column, c_size, k) for k in x.field_names])
             row -= 1
             if row < 0:
                 x.add_row(['...' for _ in range(c_size)])
                 break
-    elif type(dataset_or_ins).__name__ == 'Instance':
-        x.field_names = list(dataset_or_ins.fields.keys())
+    elif type(container).__name__ == 'Instance':
+        x.field_names = list(container.fields.keys())
         c_size = len(x.field_names)
         x.add_row([
-            sub_column(dataset_or_ins[k], column, c_size, k)
-            for k in x.field_names
+            sub_column(container[k], column, c_size, k) for k in x.field_names
         ])
+    elif type(container).__name__ == 'FieldArray':
+        x.field_names = [container.name]
+        c_size = len(x.field_names)
+        for content in container.content:
+            x.add_row([sub_column(content, column, 1, container.name)])
+            row -= 1
+            if row < 0:
+                x.add_row(['...'])
+                break
 
     else:
         raise Exception('only accept  DataSet and Instance')
@@ -608,7 +619,7 @@ def deprecated(help_message: Optional[str] = None):
 
 
 def wait_filepath(path, exist=True):
-    """等待当 path 的存在状态为 {exist} 时返回.
+    """等待当 path 的存在状态为 {exist} 时返回。
 
     :param path: 待检测的 path
     :param exist: 为 True 时表明检测这个 path 存在就返回; 为 False 表明检测到这个
@@ -631,7 +642,7 @@ def wait_filepath(path, exist=True):
 
 
 def get_class_that_defined_method(method):
-    """给定一个method，返回这个 method 的 class 的对象.
+    """给定一个method，返回这个 method 的 class 的对象。
 
     :param method:
     :return:
@@ -658,7 +669,7 @@ def get_class_that_defined_method(method):
 
 
 def is_notebook():
-    """检查当前运行环境是否为 jupyter.
+    """检查当前运行环境是否为 jupyter。
 
     :return:
     """
@@ -732,3 +743,11 @@ def _flat_nest_dict(d: Mapping, parent_key: Tuple, compress_none_key: bool):
             flat_d[_key] = v
 
     return flat_d
+
+
+def get_launch_time() -> str:
+    """返回当前程序的运行时间，这个时间戳也是保存模型时用的保存时间戳。
+
+    :return:
+    """
+    return os.getenv(FASTNLP_LAUNCH_TIME, '')

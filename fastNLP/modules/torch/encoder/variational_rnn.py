@@ -100,7 +100,7 @@ class VarRnnCellWrapper(nn.Module):
 
 class VarRNNBase(nn.Module):
     r"""
-    Variational Dropout RNN 实现.
+    Variational Dropout RNN 实现。
 
     论文参考: `A Theoretically Grounded Application of Dropout in Recurrent
     Neural Networks (Yarin Gal and Zoubin Ghahramani, 2016)
@@ -121,16 +121,16 @@ class VarRNNBase(nn.Module):
                  bidirectional=False):
         r"""
 
-        :param mode: rnn 模式, (lstm or not)
-        :param Cell: rnn cell 类型, (lstm, gru, etc)
+        :param mode: rnn 模式，(lstm or not)
+        :param Cell: rnn cell 类型，(lstm, gru, etc)
         :param input_size:  输入 `x` 的特征维度
         :param hidden_size: 隐状态 `h` 的特征维度
-        :param num_layers: rnn的层数. Default: 1
+        :param num_layers: rnn的层数。Default: 1
         :param bias: 如果为 ``False``, 模型将不会使用bias. Default: ``True``
         :param batch_first: 若为 ``True``, 输入和输出 ``Tensor`` 形状为
             (batch, seq, feature). Default: ``False``
-        :param input_dropout: 对输入的dropout概率. Default: 0
-        :param hidden_dropout: 对每个隐状态的dropout概率. Default: 0
+        :param input_dropout: 对输入的dropout概率。Default: 0
+        :param hidden_dropout: 对每个隐状态的dropout概率。Default: 0
         :param bidirectional: 若为 ``True``, 使用双向的RNN. Default: ``False``
         """
         super(VarRNNBase, self).__init__()
@@ -167,7 +167,7 @@ class VarRNNBase(nn.Module):
         r"""
 
         :param x: [batch, seq_len, input_size] 输入序列
-        :param hx: [batch, hidden_size] 初始隐状态, 若为 ``None``。设为全1向量。
+        :param hx: [batch, hidden_size] 初始隐状态，若为 ``None``。设为全1向量。
             默认为 ``None``
         :return (output, ht): [batch, seq_len, hidden_size*num_direction] 输出
             序列和 [batch, hidden_size*num_direction] 最后时刻隐状态
@@ -245,14 +245,15 @@ class VarRNNBase(nn.Module):
 
 class VarLSTM(VarRNNBase):
     r"""
-    Variational Dropout LSTM.
+    **Variational Dropout LSTM**.
+
     相关论文参考：`A Theoretically Grounded Application of Dropout in Recurrent
     Neural Networks (Yarin Gal and Zoubin Ghahramani, 2016)
     <https://arxiv.org/abs/1512.05287>`_
 
     :param input_size:  输入 `x` 的特征维度。
     :param hidden_size: 隐状态 `h` 的特征维度。
-    :param num_layers: rnn的层数，默认为 1。
+    :param num_layers: rnn 的层数，默认为 1。
     :param bias: 如果为 ``False``，模型将不会使用bias。默认为 ``True``。
     :param batch_first: 若为 ``True``，输入和输出 ``Tensor`` 形状为
         ``[batch_size, seq, feature]``，否则为 ``[seq, batch_size, feature]``。
@@ -280,6 +281,7 @@ class VarLSTM(VarRNNBase):
 class VarRNN(VarRNNBase):
     r"""
     **Variational Dropout RNN**。
+
     相关论文参考：`A Theoretically Grounded Application of Dropout in Recurrent
     Neural Networks (Yarin Gal and Zoubin Ghahramani, 2016) <https://arxiv.org/
     abs/1512.05287>`_
@@ -287,7 +289,7 @@ class VarRNN(VarRNNBase):
     :param input_size:  输入 `x` 的特征维度。
     :param hidden_size: 隐状态 `h` 的特征维度。
     :param num_layers: rnn的层数，默认为 1。
-    :param bias: 如果为 ``False``，模型将不会使用bias。默认为 ``True``。
+    :param bias: 如果为 ``F alse``，模型将不会使用bias。默认为 ``True``。
     :param batch_first: 若为 ``True``，输入和输出 ``Tensor`` 形状为
         ``[batch_size, seq, feature]``，否则为 ``[seq, batch_size, feature]``。
     :param input_dropout: 对输入的 dropout 概率。默认为 0。
@@ -314,6 +316,7 @@ class VarRNN(VarRNNBase):
 class VarGRU(VarRNNBase):
     r"""
     **Variational Dropout GRU**。
+
     相关论文参考：`A Theoretically Grounded Application of Dropout in Recurrent
     Neural Networks (Yarin Gal and Zoubin Ghahramani, 2016)
     <https://arxiv.org/abs/1512.05287>`_

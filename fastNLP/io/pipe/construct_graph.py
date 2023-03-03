@@ -88,7 +88,7 @@ def _count_pmi(windows_len, word_pair_count, word_window_freq, threshold):
     :param word_pair_count: 词共现频率字典
     :param word_window_freq: 词频率字典
     :param threshold: 阈值
-    :return: 词语 pmi 的 list 列表,其中元素为 [word1, word2, pmi]
+    :return: 词语 pmi 的 list 列表，其中元素为 [word1, word2, pmi]
     """
     word_pmi_lst = list()
     task_id = f_rich_progress.add_task(
@@ -184,7 +184,7 @@ class GraphBuilderBase:
     def build_graph_from_file(self, path: str):
         r"""
         传入文件路径，生成处理好的 scipy_sparse_matrix 对象。paths 支持的路径形式可
-        以参考 :meth:`fastNLP.io.Loader.load`
+        以参考 :meth:`.Loader.load`
 
         :param path:
         :return: scipy_sparse_matrix
@@ -224,7 +224,7 @@ class MRPmiGraphPipe(GraphBuilderBase):
     def build_graph_from_file(self, path: str):
         r"""
         传入文件路径，生成处理好的 ``scipy_sparse_matrix`` 对象。``paths`` 支持的
-        路径形式可以参考 :meth:`fastNLP.io.Loader.load`
+        路径形式可以参考 :meth:`.Loader.load`
 
         :param path: 数据集的路径。
         :return: 返回 ``csr`` 类型的稀疏矩阵图；包含训练集，验证集，测试集，在图中
@@ -266,7 +266,7 @@ class R8PmiGraphPipe(GraphBuilderBase):
     def build_graph_from_file(self, path: str):
         r"""
         传入文件路径，生成处理好的 ``scipy_sparse_matrix`` 对象。``paths`` 支持的
-        路径形式可以参考 :meth:`fastNLP.io.Loader.load`
+        路径形式可以参考 :meth:`.Loader.load`
 
         :param path: 数据集的路径。
         :return: 返回 ``csr`` 类型的稀疏矩阵图；包含训练集，验证集，测试集，在图中
@@ -307,7 +307,7 @@ class R52PmiGraphPipe(GraphBuilderBase):
     def build_graph_from_file(self, path: str):
         r"""
         传入文件路径，生成处理好的 ``scipy_sparse_matrix`` 对象。``paths`` 支持的
-        路径形式可以参考 :meth:`fastNLP.io.Loader.load`
+        路径形式可以参考 :meth:`.Loader.load`
 
         :param path: 数据集的路径。
         :return: 返回 ``csr`` 类型的稀疏矩阵图；包含训练集，验证集，测试集，在图中
@@ -349,7 +349,7 @@ class OhsumedPmiGraphPipe(GraphBuilderBase):
     def build_graph_from_file(self, path: str):
         r"""
         传入文件路径，生成处理好的 ``scipy_sparse_matrix`` 对象。``paths`` 支持的
-        路径形式可以参考 :meth:`fastNLP.io.Loader.load`
+        路径形式可以参考 :meth:`.Loader.load`
 
         :param path: 数据集的路径。
         :return: 返回 ``csr`` 类型的稀疏矩阵图；包含训练集，验证集，测试集，在图中
@@ -391,7 +391,7 @@ class NG20PmiGraphPipe(GraphBuilderBase):
     def build_graph_from_file(self, path: str):
         r"""
         传入文件路径，生成处理好的 ``scipy_sparse_matrix`` 对象。``paths`` 支持的
-        路径形式可以参考 :meth:`fastNLP.io.Loader.load`
+        路径形式可以参考 :meth:`.Loader.load`
 
         :param path: 数据集的路径。
         :return: 返回 ``csr`` 类型的稀疏矩阵图；包含训练集，验证集，测试集，在图中

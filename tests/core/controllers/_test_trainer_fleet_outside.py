@@ -1,19 +1,15 @@
 """这个文件测试用户自己初始化分布式环境后使用 paddle 的情况:
 
     >>> # 测试用 python -m paddle.distributed.launch 启动
-    >>> FASTNLP_BACKEND=paddle python -m paddle.distributed.launch --gpus=0,2,3 _test_trainer_fleet_outside.py
+    >>> FASTNLP_BACKEND=paddle python -m paddle.distributed.launch --devices=0,2,3 _test_trainer_fleet_outside.py
     >>> # 测试在限制 GPU 的情况下用 python -m paddle.distributed.launch 启动
-    >>> CUDA_VISIBLE_DEVICES=0,2,3 FASTNLP_BACKEND=paddle python -m paddle.distributed.launch --gpus=0,2,3 _test_trainer_fleet_outside.py
+    >>> CUDA_VISIBLE_DEVICES=0,2,3 FASTNLP_BACKEND=paddle python -m paddle.distributed.launch --devices=0,2,3 _test_trainer_fleet_outside.py
 """
 import sys
 
 sys.path.append('../../../')
 
 from dataclasses import dataclass
-
-import paddle.distributed.fleet as fleet
-from paddle.io import DataLoader
-from paddle.optimizer import Adam
 
 from fastNLP.core.callbacks.progress_callback import RichCallback
 from fastNLP.core.controllers.trainer import Trainer
@@ -22,10 +18,14 @@ from tests.helpers.datasets.paddle_data import PaddleArgMaxDataset
 from tests.helpers.models.paddle_model import \
     PaddleNormalModel_Classification_2
 
+import paddle.distributed.fleet as fleet
+from paddle.io import DataLoader
+from paddle.optimizer import Adam
+
 
 @dataclass
 class MNISTTrainFleetConfig:
-    num_labels: int = 3
+    num_labels: int = 5
     feature_dimension: int = 5
 
     batch_size: int = 4

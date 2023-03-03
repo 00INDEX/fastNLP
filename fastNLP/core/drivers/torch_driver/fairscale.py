@@ -25,15 +25,18 @@ __all__ = ['FairScaleDriver']
 
 
 class FairScaleDriver(TorchDDPDriver):
-    """实现 ``fairscale`` 功能的 ``Driver``。
+    r"""实现 ``fairscale`` 功能的 ``Driver``。
 
-    :param model: 传入给 ``Trainer`` 的 ``model`` 参数。
+    :param model: 传入给 :class:`.Trainer` 的 ``model`` 参数。
     :param parallel_device: 用于分布式训练的 ``gpu`` 设备。
     :param is_pull_by_torch_run: 标志当前的脚本的启动是否由 ``python -m
         torch.distributed.launch`` 启动的。
     :param fp16: 是否开启 fp16 训练。
     :param fairscale_kwargs:
 
+        * *fs_type* -- 使用 ``fairscale`` 进行分布式训练的模式，包括 ``['ddp',
+          'sdp', 'fsdp']`` 三种模式，分别代表 ``DistributedDataParallel``、
+          ``ShardedDataParallel`` 和 ``FullyShardedDataParallel``。
         * *oss_kwargs* --
         * *sdp_kwargs* --
         * *fsdp_kwargs* --
@@ -42,17 +45,16 @@ class FairScaleDriver(TorchDDPDriver):
           置为 ``None``
         * *non_blocking* -- 表示用于 :meth:`torch.Tensor.to` 方法的参数
           non_blocking
-        * *gradscaler_kwargs* -- 用于 ``fp16=True`` 时，提供给 :class:`torch.
+        * *gradscaler_kwargs* -- 用于 ``fp16=True`` 时，提供给 :class:`torch.\
           amp.cuda.GradScaler` 的参数
     :kwargs:
-        * *wo_auto_param_call* (``bool``) -- 是否关闭在训练时调用我们的
+        * *model_wo_auto_param_call* (``bool``) -- 是否关闭在训练时调用我们的
           ``auto_param_call`` 函数来自动匹配 batch 和前向函数的参数的行为
 
         .. note::
 
-            关于该参数的详细说明，请参见 :class:`~fastNLP.core.controllers.
-            Trainer` 中的描述；函数 ``auto_param_call`` 详见 :func:`fastNLP.
-            core.utils.auto_param_call`。
+            关于该参数的详细说明，请参见 :class:`.Trainer` 和 :func:`~fastNLP.\
+            core.auto_param_call`。
 
         * *output_from_new_proc* (``str``) -- 应当为一个字符串，表示在多进程的
           driver 中其它进程的输出流应当被做如何处理；其值应当为以下之一： ``["all",
@@ -93,7 +95,7 @@ class FairScaleDriver(TorchDDPDriver):
         # 仅在 ddp 和 sdp 下有使用到
         self._oss_kwargs = self._fairscale_kwargs.get('oss_kwargs', {})
         self._sdp_kwargs = self._fairscale_kwargs.get('sdp_kwargs', {})
-        self._fdsp_kwargs = self._fairscale_kwargs.get('fsdp_kwargs', {})
+        self._fsdp_kwargs = self._fairscale_kwargs.get('fsdp_kwargs', {})
         self._ddp_kwargs = self._fairscale_kwargs.get('ddp_kwargs', {})
 
         if self.fs_type == 'ddp' or fp16 is False:
@@ -167,9 +169,9 @@ class FairScaleDriver(TorchDDPDriver):
         r"""
         准备分布式环境，该函数主要做以下两件事情：
 
-            1. 开启多进程，每个 gpu 设备对应单独的一个进程；
-            2. 每个进程将模型迁移到自己对应的 ``gpu`` 设备上；然后使用
-               ``DistributedDataParallel`` 包裹模型；
+        1. 开启多进程，每个 gpu 设备对应单独的一个进程；
+        2. 每个进程将模型迁移到自己对应的 ``gpu`` 设备上；然后使用
+           ``DistributedDataParallel`` 包裹模型；
         """
         if self._has_setup:
             return
@@ -201,18 +203,18 @@ class FairScaleDriver(TorchDDPDriver):
                     rank=self.global_rank,
                     world_size=self.world_size)
             # 用户在这个 trainer 前面又初始化了一个 trainer，并且
-            # 使用的是 TorchDDPDriver；
+            # 使用的是 FairScaleDriver；
             else:
-                # 如果 `dist.is_initialized() is True`，那么说明 TorchDDPDriver
+                # 如果 `dist.is_initialized() is True`，那么说明 FairScaleDriver
                 # 在之前已经初始化并且已经 setup 过一次，那么我们需要保证现在使用的
-                # （即之后的）TorchDDPDriver 的设置和第一个 TorchDDPDriver 是完全
-                # 一样的；
+                # （即之后的）FairScaleDriver 的设置和第一个 FairScaleDriver 是完
+                # 全一样的；
                 pre_num_processes = int(os.environ[FASTNLP_DISTRIBUTED_CHECK])
                 if pre_num_processes != len(self.parallel_device):
                     raise RuntimeError(
-                        'Notice you are using `TorchDDPDriver` after one '
-                        'instantiated `TorchDDPDriver`, it is not allowed '
-                        'that your second `TorchDDPDriver` has a new setting '
+                        'Notice you are using `FairScaleDriver` after one '
+                        'instantiated `FairScaleDriver`, it is not allowed '
+                        'that your second `FairScaleDriver` has a new setting '
                         'of parameters `num_nodes` and `num_processes`.')
                 self.world_size = dist.get_world_size()
                 self.global_rank = dist.get_rank()
@@ -278,7 +280,7 @@ class FairScaleDriver(TorchDDPDriver):
             assert len(optimizer.param_groups) == 1, \
                 'Cannot assign parameter specific optimizer parameter ' \
                 "for 'fsdp'."
-            fsdp_kwargs = self._fdsp_kwargs
+            fsdp_kwargs = self._fsdp_kwargs
             fsdp_kwargs['mixed_precision'] = self.fp16
             fsdp_kwargs['state_dict_on_rank_0_only'] = fsdp_kwargs.get(
                 'state_dict_on_rank_0_only', True)
@@ -385,12 +387,12 @@ class FairScaleDriver(TorchDDPDriver):
 
         :param folder: 保存断点重训的状态的文件夹；:meth:`save_checkpoint` 函数应
             该在该路径下面下面新增名为 ``FASTNLP_CHECKPOINT_FILENAME`` 与
-            ``FASTNLP_MODEL_FILENAME``（若 ``should_save_model`` 为 ``True``）
+            ``FASTNLP_MODEL_FILENAME`` （若 ``should_save_model`` 为 ``True``）
             的文件。把 model 相关的内容放入到 ``FASTNLP_MODEL_FILENAME`` 文件中，
             将传入的 ``states`` 以及自身产生的其它状态一并保存在
             ``FASTNLP_CHECKPOINT_FILENAME`` 里面。
-        :param states: 由 :class:`~fastNLP.core.controllers.Trainer` 传入的一个
-            字典，其中已经包含了为了实现断点重训所需要保存的其它对象的状态。
+        :param states: 由 :class:`.Trainer` 传入的一个字典，其中已经包含了为了实现
+            断点重训所需要保存的其它对象的状态。
         :param dataloader: 正在使用的 dataloader。
         :param only_state_dict: 是否只保存模型的参数，当 ``should_save_model``
             为 ``False``，该参数无效。
@@ -429,6 +431,7 @@ class FairScaleDriver(TorchDDPDriver):
                     optimizer)
             elif self.fs_type == 'sdp':
                 optimizer.consolidate_state_dict(recipient_rank=0)
+                optimizer_state = optimizer.state_dict()
             else:
                 optimizer_state = optimizer.state_dict()
             if self.local_rank == 0:

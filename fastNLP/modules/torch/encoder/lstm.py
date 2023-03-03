@@ -1,6 +1,6 @@
 r"""
-轻量封装的 **Pytorch LSTM** 模块.
-可在 :meth:`forward` 时传入序列的长度, 自动对 padding 做合适的处理.
+轻量封装的 **Pytorch LSTM** 模块。
+可在 :meth:`forward` 时传入序列的长度，自动对 padding 做合适的处理。
 """
 
 from fastNLP.envs.imports import _NEED_IMPORT_TORCH
@@ -18,12 +18,14 @@ __all__ = ['LSTM']
 
 class LSTM(Module):
     r"""
-    **LSTM** 模块，轻量封装的 **Pytorch LSTM**。在提供 ``seq_len`` 的情况下，将自
-    动使用 ``pack_padded_sequence``；同时默认将 ``forget gate`` 的 bias 初始化为
-    **1**，且可以应对 :class:`DataParallel` 中 LSTM 的使用问题。
+    **LSTM** 模块，轻量封装的 **Pytorch LSTM**。
+
+    在提供 ``seq_len`` 的情况下，将自动使用 ``pack_padded_sequence``；同时默认将
+    ``forget gate`` 的 bias 初始化为 **1**，且可以应对 :class:`DataParallel` 中
+    LSTM 的使用问题。
 
     :param input_size:  输入 `x` 的特征维度
-    :param hidden_size: 隐状态 `h` 的特征维度. 如果 ``bidirectional`` 为
+    :param hidden_size: 隐状态 `h` 的特征维度。如果 ``bidirectional`` 为
         ``True``，则输出的维度会是 ``hidde_size*2``
     :param num_layers: rnn 的层数
     :param dropout: 层间 dropout 概率

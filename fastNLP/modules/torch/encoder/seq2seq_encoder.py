@@ -86,7 +86,7 @@ class TransformerSeq2SeqEncoderLayer(nn.Module):
 
 
 class TransformerSeq2SeqEncoder(Seq2SeqEncoder):
-    """基于 **Transformer** 的 :class:`Encoder`
+    """基于 **Transformer** 的 ``Encoder``
 
     :param embed: ``decoder`` 输入的 embedding，支持以下几种输入类型：
 
@@ -101,7 +101,7 @@ class TransformerSeq2SeqEncoder(Seq2SeqEncoder):
     :param num_layers: :class:`TransformerSeq2SeqDecoderLayer` 的层数
     :param n_head: **多头注意力** head 的数目，需要能被 ``d_model`` 整除
     :param dim_ff: FFN 中间映射的维度
-    :param dropout: :class:`~fastNLP.modules.torch.decoder.SelfAttention` 和
+    :param dropout: :class:`~fastNLP.modules.torch.attention.SelfAttention` 和
         FFN 中的 dropout 的大小
     """
 
@@ -164,7 +164,7 @@ class TransformerSeq2SeqEncoder(Seq2SeqEncoder):
 
 class LSTMSeq2SeqEncoder(Seq2SeqEncoder):
     """
-    **LSTM** 的 Encoder
+    **LSTM** 的 ``Encoder``。
 
     :param embed: ``decoder`` 输入的 embedding，支持以下几种输入类型：
 
@@ -175,7 +175,7 @@ class LSTMSeq2SeqEncoder(Seq2SeqEncoder):
         - :class:`numpy.ndarray`，将使用传入的 ndarray 作为 Embedding 初始化；
         - :class:`torch.Tensor`，此时将使用传入的值作为 Embedding 初始化；
     :param num_layers: LSTM 的层数
-    :param hidden_size: 隐藏层大小, 该值也被认为是 ``encoder`` 的输出维度大小
+    :param hidden_size: 隐藏层大小，该值也被认为是 ``encoder`` 的输出维度大小
     :param dropout: Dropout 的大小
     :param bidirectional: 是否使用双向
     """

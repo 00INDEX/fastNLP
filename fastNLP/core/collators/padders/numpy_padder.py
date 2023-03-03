@@ -31,15 +31,16 @@ def _get_dtype(ele_dtype, dtype, class_name):
 
 
 class NumpyNumberPadder(Padder):
-    """可以将形如 ``[1, 2, 3]`` 这类的数据转为 ``np.array([1, 2, 3])``。
-    可以通过:
+    r"""**numpy** 处理数字 batch 的 ``Padder``。
+
+    可以通过如下方式使用:
 
         >>> NumpyNumberPadder.pad([1, 2, 3])
+        [1. 2. 3.]
 
-    使用。
 
     :param pad_val: 该值无意义；
-    :param ele_dtype: 用于检测当前 field 的元素类型是否可以转换为 :class:`np.
+    :param ele_dtype: 用于检测当前 field 的元素类型是否可以转换为 :class:`np.\
         array` 类型；
     :param dtype: 输出的数据的 dtype ；
     """
@@ -60,15 +61,16 @@ class NumpyNumberPadder(Padder):
 
 
 class NumpySequencePadder(Padder):
-    r"""将类似于 ``[[1], [1, 2]]`` 的内容 pad 为 ``np.array([[1, 0], [1
-    , 2]])``，可 以 pad 多重嵌套的数据。可以通过以下的方式直接使用:
+    r"""**numpy** 处理列表 batch 的 ``Padder``。
+
+    可以通过以下的方式直接使用:
 
         >>> NumpySequencePadder.pad([[1], [1, 2]], pad_val=-100, dtype=float)
         [[   1. -100.]
          [   1.    2.]]
 
     :param pad_val: pad 的值是多少；
-    :param ele_dtype: 用于检测当前 field 的元素类型是否可以转换为 :class:`np.
+    :param ele_dtype: 用于检测当前 field 的元素类型是否可以转换为 :class:`np.\
         array` 类型；
     :param dtype: 输出的数据的 dtype ；
     """
@@ -90,15 +92,17 @@ class NumpySequencePadder(Padder):
 
 
 class NumpyTensorPadder(Padder):
-    """pad 类似于 ``[np.array([3, 4]), np.array([1])]`` 的 field 。若内部元素不为
-    :class:`np.ndarray`，则必须含有 :meth:`tolist` 方法。
+    r"""**numpy** 处理数组 batch 的 ``Padder``。
+
+    可以 pad 类似于 ``[np.array([3, 4]), np.array([1])]`` 的 field 。若内部元素不
+    为 :class:`np.ndarray`，则必须含有 :meth:`tolist` 方法。
 
         >>> NumpyTensorPadder.pad([np.array([3, 4]), np.array([1])], pad_val=-100)
         [[   3.    4.]
          [   1. -100.]]
 
     :param pad_val: pad 的值是多少。
-    :param ele_dtype: 用于检测当前 field 的元素类型是否可以转换为 :class:`np.
+    :param ele_dtype: 用于检测当前 field 的元素类型是否可以转换为 :class:`np.\
         array` 类型。
     :param dtype: 输出的数据的 dtype 是什么
     """

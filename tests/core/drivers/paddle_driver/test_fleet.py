@@ -1,3 +1,6 @@
+import os
+import subprocess
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -52,7 +55,7 @@ def generate_driver(labels,
 
 @pytest.mark.paddledist
 class TestFleetDriverFunction:
-    """测试 PaddleFleetDriver 一些简单函数的测试类，基本都是测试能否运行、是否存在 import 错误等问题."""
+    """测试 PaddleFleetDriver 一些简单函数的测试类，基本都是测试能否运行、是否存在 import 错误等问题。"""
 
     @classmethod
     def setup_class(cls):
@@ -87,7 +90,7 @@ class TestFleetDriverFunction:
     @magic_argv_env_context
     def test_get_no_sync_context(self):
         """测试 get_no_sync_context 函数."""
-        with self.driver.get_model_no_sync_context():
+        with self.driver.get_model_no_sync_context()():
             pass
         dist.barrier()
 
@@ -770,9 +773,8 @@ class TestSaveLoad:
             path = 'model'
 
             dataloader = DataLoader(self.dataset, batch_size=2)
-            self.driver1, self.driver2 = generate_driver(40,
-                                                         1), generate_driver(
-                                                             40, 1)
+            self.driver1 = generate_driver(40, 1)
+            self.driver2 = generate_driver(40, 1)
 
             if only_state_dict:
                 self.driver1.save_model(path, only_state_dict)
@@ -845,6 +847,15 @@ class TestSaveLoad:
                     break
                 already_seen_x_set.update(batch['x'].reshape((-1, )).tolist())
                 already_seen_y_set.update(batch['y'].reshape((-1, )).tolist())
+                res1 = self.driver1.model(
+                    batch,
+                    fastnlp_fn=self.driver1.model._layers.model.train_step,
+                    fastnlp_signature_fn=None,
+                    wo_auto_param_call=False,
+                )
+                self.driver1.backward(res1['loss'])
+                self.driver1.zero_grad()
+                self.driver1.step()
 
             # 同步
             dist.barrier()
@@ -974,6 +985,15 @@ class TestSaveLoad:
                     break
                 already_seen_x_set.update(batch['x'].reshape((-1, )).tolist())
                 already_seen_y_set.update(batch['y'].reshape((-1, )).tolist())
+                res1 = self.driver1.model(
+                    batch,
+                    fastnlp_fn=self.driver1.model._layers.model.train_step,
+                    fastnlp_signature_fn=None,
+                    wo_auto_param_call=False,
+                )
+                self.driver1.backward(res1['loss'])
+                self.driver1.zero_grad()
+                self.driver1.step()
 
             # 同步
             dist.barrier()
@@ -1070,3 +1090,16 @@ class TestSaveLoad:
 
         finally:
             rank_zero_rm(path)
+
+
+@pytest.mark.paddle
+def test_fleet():
+    """测试上面的测试函数."""
+    skip_no_cuda()
+    path = Path(os.path.abspath(__file__)).parent
+    command = [
+        'pytest', f"{path.joinpath('test_fleet.py')}", '-m', 'paddledist'
+    ]
+    env = deepcopy(os.environ)
+    env['FASTNLP_BACKEND'] = 'paddle'
+    subprocess.check_call(command, env=env)

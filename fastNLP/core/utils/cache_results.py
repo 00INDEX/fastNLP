@@ -69,7 +69,7 @@ def get_func_calls(tree):
 
 
 def truncate_start_blanks(source: str) -> str:
-    """将source中的每一行按照第一行的indent删掉多余的空格.
+    """将source中的每一行按照第一行的indent删掉多余的空格。
 
     :param source:
     :return:
@@ -158,7 +158,7 @@ def _get_func_and_its_called_func_source_code(func) -> List[str]:
 
 def _prepare_cache_filepath(filepath: str):
     r"""
-    检查filepath是否可以作为合理的cache文件. 如果可以的话，会自动创造路径
+    检查filepath是否可以作为合理的cache文件。如果可以的话，会自动创造路径
 
     :param filepath: str.
     :return: None, if not, this function will raise error
@@ -213,8 +213,20 @@ def cache_results(_cache_fp: str,
                   _verbose: int = 1,
                   _check_hash: bool = True):
     r"""
-    :func:`cache_results` 是 **fastNLP** 中用于缓存数据的装饰器。通过下面的例子看
-    一下如何使用::
+    **fastNLP** 中用于缓存数据的装饰器，可以节省调试代码过程中一些耗时过长程序带来的
+    时间开销。
+
+    ``cache_results`` 函数是 **fastNLP** 中用于缓存数据的装饰器，通过该函数您
+    可以省去调试代码过程中一些耗时过长程序带来的时间开销。比如在加载并处理较大的数据
+    时，每次修改训练参数都需要从头开始执行处理数据的过程，那么 ``cache_results``
+    便可以跳过这部分漫长的时间。详细的使用方法和原理请参见下面的说明。
+
+    .. warning::
+
+        如果您发现对代码进行修改之后程序执行的结果没有变化，很有可能是这个函数的原因；
+        届时删除掉缓存数据即可。
+
+    通过下面的例子看一下如何使用::
 
         import time
         import numpy as np

@@ -41,51 +41,42 @@ class _JittorDataset(Dataset):
 
 
 class JittorDataLoader:
-    r"""提供给 ``jittor`` 框架使用的 ``DataLoader`` 函数，``JittorDataLoader`` 提
-    供了 ``Collator`` 来自动检测 dataset 的每个 field 是否可 pad，若是可 pad 的
-    field 则自动 pad 到相同长度，否则只会将相同 field 的数据收集组成一个 batch 返
-    回。具体详见 :class:`~fastNLP.core.collators.Collator`；用户通过 callte_fn
-    来控制是否使用该功能，collate_fn 只能为 ``['auto', None, Callable]`` 三种取
-    值。
+    r"""提供给 ``jittor`` 框架使用的 ``DataLoader`` 类。
 
-        * 当 callate_fn 为 ``'auto'`` 时，``JittorDataLoader`` 会使用 fastNLP 的
-          :class:`~fastNLP.core.collators.Collator` 作为 collate_fn 的取值。此时
-          可以配套使用 :meth:`set_pad` 和 :meth:`set_ignore` 方法来设置 pad_val
-          或忽略某个 field 的检测。
-        * 当 callate_fn 为 ``None`` 时，``JittorDataLoader`` 默认使用 Jittor
-          DataLoader 自带的 collate_fn
-        * 当 collate_fn 为 :class:`Callable` 时，该 Callable 函数应当接受一个
-          batch 参数作为输入，batch 是一个 List 对象且 List 中的每一条数据都是
-          dataset 的一条数据；该 Callable 函数还应当返回一个对象。
+    ``JittorDataLoader`` 提供了 ``Collator`` 来自动检测 dataset 的每个 field 是否
+    可 pad，若是可 pad 的field 则自动 pad 到相同长度，否则只会将相同 field 的数据收
+    集组成一个 batch 返回。具体详见 :class:`.Collator`；用户可以通过 collate_fn 来
+    控制是否使用该功能。
 
-    :param dataset: 实现了 __getitem__() 和 __len__() 的对象。
+    :param dataset: 需要遍历的数据集，可以是 :class:`~fastNLP.core.DataSet`、
+        jittor 的 :class:`Dataset`、hugginface 的数据集对象，以及所有实现了
+        :meth:`__getitem__` 和 :meth:`__len__` 函数的数据集对象。
     :param batch_size: 批次大小，默认为 ``16`` 且当 batch_sampler 为 None 有效。
     :param shuffle: 是否打乱数据集，默认为 ``False``。
     :param drop_last: 当 ``drop_last=True`` 时，``JittorDataLoader`` 会扔掉最后
         一个长度小于 ``batch_size`` 的 batch 数据；若 ``drop_last=False`` , 则会
         返回该 batch 数据。默认为 ``False``。
-    :param num_workers: 当 ``num_workers > 0`` 时, ``JittorDataLoader`` 会开启
+    :param num_workers: 当 ``num_workers > 0`` 时， ``JittorDataLoader`` 会开启
         num_workers 个子进程来处理数据，可以加快数据处理速度，但同时也消耗大量内
         存。当 ``num_workers=0`` 时，不开启子进程。默认为 ``0``。
     :param buffer_size: 每个进程占用的内存空间，默认为 512M。该参数主要是配合参数
         ``num_workers`` 使用，用户可以自定义每个进程的内存大小。
     :param stop_grad: 是否不使用梯度，默认 ``True``。
     :param keep_numpy_array: 返回的数据是 ``np.array`` 类型而不是 ``jittor.
-        Var`` 类型，默认为 ``False``
+        Var`` 类型，默认为 ``False``。
     :param endless: 是否让 ``JittorDataLoader`` 无限返回数据，也就是将 dataset 循
-        环使用使得返回数据是没有限制的。默认为 ``False``.
+        环使用使得返回数据是没有限制的。默认为 ``False``。
     :param collate_fn: 用于将从 dataset 中取出的一个 batch 数据进行打包处理的
         Callable 函数，其值应该为以下三个: ``[None, "auto", Callable]``。
 
-        * callate_fn 为 ``None`` 时，需要注意的是此时传进来的 dataset 类型不能为
-          :class:`~fastNLP.core.dataset.DataSet`，当 collate_fn 为 ``None``
-          时，``JittorDataLoader`` 会调用默认的 Jittor 框架的 ``DataLoader`` 自带
-          的 ``collate_batch`` 作为 callate_fn 的默认值，不过需要注意的是其无法处
-          理 :class:`~fastNLP.core.dataset.DataSet` 的 dataset 对象。
-        * callate_fn 为 ``'auto'`` 时，``JittorDataLoader`` 将会使用 fastNLP 的
-          :class:`~fastNLP.core.collators.Collator` 作为 collate_fn 的默认值。此
-          时可以配套使使用 :meth:`set_pad` 和 :meth:`set_ignore` 方法来设置
-          pad_val 或忽略某个 field 的检测。
+        * collate_fn 为 ``None`` 时，需要注意的是此时传进来的 dataset 类型不能为
+          :class:`.DataSet`，此时 ``JittorDataLoader`` 会调用默认的 Jittor 框架
+          的 ``DataLoader`` 自带的 ``collate_batch`` 作为 collate_fn 的默认值，不
+          过需要注意的是其无法处理 :class:`.DataSet` 的 dataset 对象。
+        * collate_fn 为 ``'auto'`` 时，``JittorDataLoader`` 将会使用 fastNLP 的
+          :class:`~fastNLP.core.Collator` 作为 collate_fn 的默认值。此时可以配套
+          使用 :meth:`set_pad` 和 :meth:`set_ignore` 方法来设置 pad_val 或忽略某
+          个 field 的检测。
         * collate_fn 为 :class:`Callable` 时，该 Callable 函数应当接受一个 batch
           参数作为输入，batch 是一个 List 对象且 List 中的每一条数据都是 dataset
           的一条数据；该 Callable 函数还应当返回一个对象。
@@ -174,9 +165,9 @@ class JittorDataLoader:
                 dtype=None,
                 backend=None,
                 pad_fn: Optional[Callable] = None) -> Collator:
-        """如果需要对某个 field 的内容进行特殊的调整，请使用这个函数。
+        r"""如果需要对某个 field 的内容进行特殊的调整，请使用这个函数。
 
-        :param field_name: 需要调整的 field 的名称。如果 :meth:`Dataset.
+        :param field_name: 需要调整的 field 的名称。如果 :meth:`Dataset.\
             __getitem__` 方法返回的是字典类型，则可以直接使用对应的 field 的 key 来
             表示，如果是嵌套字典，可以使用元组表示多层次的 key，例如 ``{'a': {'b':
             1}}`` 中可以使用 ``('a', 'b')``；如果 :meth:`Dataset.__getitem__` 返
@@ -189,10 +180,10 @@ class JittorDataLoader:
             果 ``backend`` 为 ``None``，该值无意义。
         :param dtype: 对于需要 pad 的 field ，该 field 数据的 ``dtype``。
         :param backend: 可选 ``['raw', 'numpy', 'torch', 'paddle', 'jittor',
-            'oneflow', 'auto']``，分别代表输出为 :class:`list`, :class:`numpy.
+            'oneflow', 'auto']``，分别代表输出为 :class:`list`, :class:`numpy.\
             ndarray`, :class:`torch.Tensor`, :class:`paddle.Tensor`,
             :class:`jittor.Var`, :class:`oneflow.Tensor` 类型。若 ``pad_val``
-            为 ``None``，该值无意义 。
+            为 ``None``，该值无意义。
         :param pad_fn: 指定当前 field 的 pad 函数，传入该函数则 ``pad_val``,
             ``dtype``, ``backend`` 等参数失效。``pad_fn`` 的输入为当前 field 的
             batch 形式。collator 将自动 unbatch 数据，然后将各个 field 组成各自
@@ -213,7 +204,7 @@ class JittorDataLoader:
                              'set_pad() is allowed.')
 
     def _get_collator(self):
-        """如果 collate_fn 是 Collator 对象，得到该对象。如果没有的话，返回 None.
+        """如果 collate_fn 是 Collator 对象，得到该对象。如果没有的话，返回 None。
 
         :return:
         """
@@ -231,7 +222,7 @@ class JittorDataLoader:
 
             dataloader.set_ignore('field1', 'field2')
 
-        :param field_names: 需要调整的 field 的名称。如果 :meth:`Dataset.
+        :param field_names: 需要调整的 field 的名称。如果 :meth:`Dataset.\
             __getitem__` 方法返回的是字典类型，则可以直接使用对应的 field 的 key 来
             表示，如果是嵌套字典，可以使用元组表示多层次的 key，例如 ``{'a': {'b':
             1}}`` 中可以使用 ``('a', 'b')``；如果 :meth:`Dataset.__getitem__`
@@ -265,17 +256,17 @@ def prepare_jittor_dataloader(ds_or_db, batch_size: int = 16,
                               collate_fn: Union[None, str, Callable] = 'auto',
                               non_train_batch_size: Optional[int] = None) \
         -> Union[Dict[str, JittorDataLoader], JittorDataLoader]:
-    r"""``prepare_jittor_dataloader`` 的功能是将输入的单个或多个 dataset 同时转为
-    :class:`JittorDataLoader` 对象，详见 :class:`JittorDataLoader` 的说明。根
-    据 ``ds_or_db`` 的类型 ``[DataSet, DataBundle, Dict[name, Dataset]]`` 不同而
-    有不同返回结果, 具体如下:
+    r"""将输入的单个或多个 dataset 同时转为 :class:`JittorDataLoader` 对象，根据
+    ``ds_or_db`` 的类型不同而有不同返回结果。
 
-        * 当 ds_or_db  :class:`~fastNLP.io.DataSet` 时，
+    :param ds_or_db: 可以有以下三种取值：
+
+        * 当 ds_or_db  为 :class:`.DataSet` 等数据集类型时，
           ``prepare_jittor_dataloader`` 会将使用的除了 non_train_batch_size 和
           non_train_sampler 以外的参数来实例化一个 :class:`JittorDataLoader` 对象
-          并返回。详见 :class:`~fastNLP.core.dataloaders.JittorDataLoader`；
-        * 当 ds_or_db 为 :class:`~fastNLP.io.DataBundle` 时，
-          ``prepare_jittor_dataloader`` 会遍历 ``DataBundle`` 的数据集的
+          并返回。详见 :class:`JittorDataLoader` 的说明；
+        * 当 ds_or_db 为 :class:`.DataBundle` 时，
+          ``prepare_jittor_dataloader`` 会遍历 :class:`.DataBundle` 的数据集的
           key-value 来创建不同的 :class:`JittorDataLoader` 对象；当 key 中包含
           ``'train'`` 字符串时，``prepare_jittor_dataloader`` 默认该 value 为训
           练数据集，将 ``batch_size`` 和 ``sampler`` 作为参数，其他 key 不包含
@@ -291,15 +282,6 @@ def prepare_jittor_dataloader(ds_or_db, batch_size: int = 16,
           数。最终根据  ``key: JittorDataLoader`` 组成 ``Dict[key,
           JittorDataLoader]`` 的字典返回；
 
-    :param ds_or_db: 可以有以下三种取值：
-
-        * ds_or_db 为 :class:`~fastNLP.io.DataBundle`, 返回值为 ``Dict[str,
-          JittorDataLoader]`` 的字典；
-        * ds_or_db 为 ``Dict[str, DataSet]`` 字典，返回值为 ``Dict[str,
-          JittorDataLoader]`` 的字典；
-        * ds_or_db 为实现了 :meth:`__getitem__` 和 :meth:`__len__` 的对象 ，返回
-          值为 :class:`JittorDataLoader`；
-
     :param non_train_batch_size: 如果传入的 ``ds_or_db`` 为 :class:`Dict` 或
         :class:`~fastNLP.io.DataBundle` 对象，可以通过改参数设置名称不为 `train`
         的其他 ``dataset`` 的 ``batch_size``。默认为 ``16``。
@@ -309,7 +291,7 @@ def prepare_jittor_dataloader(ds_or_db, batch_size: int = 16,
     :param drop_last: 当 ``drop_last=True`` 时，:class:`JittorDataLoader` 会扔掉
         最后一个长度小于 ``batch_size`` 的 batch 数据；若 ``drop_last=False``，
         则会返回该 batch 数据。默认为 ``False``。
-    :param num_workers: 当 ``num_workers > 0`` 时, :class:`JittorDataLoader` 会
+    :param num_workers: 当 ``num_workers > 0`` 时， :class:`JittorDataLoader` 会
         开启 num_workers 个子进程来处理数据，可以加快数据处理速度，但同时也消耗大量
         内存。当 ``num_workers=0`` 时，不开启子进程。默认为 ``0``。
     :param buffer_size: 每个进程占用的内存空间，默认为 512M。主要是配合参数
@@ -318,23 +300,23 @@ def prepare_jittor_dataloader(ds_or_db, batch_size: int = 16,
     :param keep_numpy_array: 返回的数据是 :class:`np.array` 类型而不是
         :class:`ittor.Var` 类型，默认为 ``False``
     :param endless: 是否让 :class:`JittorDataLoader` 无限返回数据，也就是将
-        dataset 循环使用使得返回数据是没有限制的。默认为 ``False``.
+        dataset 循环使用使得返回数据是没有限制的。默认为 ``False``
     :param collate_fn: 用于从 dataset 取到的一个 batch 数据进行打包处理的
         Callable 函数，其值应该为以下三个: ``[None, "auto", Callable]``。
 
-        * callate_fn 为 ``None`` 时，需要注意的是此时传进来的 dataset 类型不能为
-          :class:`~fastNLP.core.dataset.DataSet` , 当 collate_fn 为 ``None``
-          时，:class:`JittorDataLoader` 调用默认的 Jittor 框架的 ``DataLoader``
-          自带的 ``collate_batch`` 作为 callate_fn 的默认值，其无法处理
-          :class:`~fastNLP.core.dataset.DataSet` 的 dataset 对象。
-        * callate_fn 为 ``'auto'`` 时，:class:`JittorDataLoader` 使用
-          :class:`~fastNLP.core.collators.Collator` 作为 collate_fn 的默认值。
-          此时可以配套使用 :class:`JittorDataLoader` 的 :meth:`JittorDataLoader.
-          set_pad` 和 :meth:`JittorDataLoader.set_ignore` 法来设置 pad_val 或忽
-          略某个 field 的检测。
-        * collate_fn 为 :class:`Callable` 时，该 Callable 函数应当接受一个
-          batch 参数作为输入，batch 是一个 List 对象且 List 中的每一条数据都是
-          dataset 的一条数据；该 Callable 函数还应当返回一个对象。
+        * collate_fn 为 ``None`` 时，需要注意的是此时传进来的 dataset 类型不能为
+          :class:`.DataSet`，此时 ``JittorDataLoader`` 会调用默认的 Jittor 框架
+          的 ``DataLoader`` 自带的 ``collate_batch`` 作为 collate_fn 的默认值，不
+          过需要注意的是其无法处理 :class:`.DataSet` 的 dataset 对象。
+        * collate_fn 为 ``'auto'`` 时，``JittorDataLoader`` 将会使用 fastNLP 的
+          :class:`~fastNLP.core.Collator` 作为 collate_fn 的默认值。此时可以配套
+          使用 :meth:`JittorDataLoader.set_pad` 和 :meth:`JittorDataLoader.\
+          set_ignore` 方法来设置 pad_val 或忽略某
+          个 field 的检测。
+        * collate_fn 为 :class:`Callable` 时，该 Callable 函数应当接受一个 batch
+          参数作为输入，batch 是一个 List 对象且 List 中的每一条数据都是 dataset
+          的一条数据；该 Callable 函数还应当返回一个对象。
+
     """
     from fastNLP.io.data_bundle import DataBundle
 

@@ -1,10 +1,12 @@
 import os
 import re
+import operator
 from typing import Any, Optional, Union
 
 from fastNLP.envs import (FASTNLP_BACKEND_LAUNCH, FASTNLP_DISTRIBUTED_CHECK,
                           USER_CUDA_VISIBLE_DEVICES)
 from fastNLP.envs.imports import _NEED_IMPORT_PADDLE
+from fastNLP.envs.utils import _compare_version
 
 if _NEED_IMPORT_PADDLE:
     import paddle
@@ -30,7 +32,7 @@ def _convert_data_device(device: Union[str, int]) -> str:
     设置为可见的第一张显卡；这是为 了顺利执行 **paddle** 的分布式训练而设置的。在这种
     情况下，单纯使用 ``driver.data_device`` 是无效的。比如在分布式训练中将设备设置
     为 ``[0,2,3]``，且用户设置了 ``CUDA_VISIBLE_DEVICES=3,4,5,6``，那么在
-    ``rank1``的进程中有::
+    ``rank1`` 的进程中有::
 
         os.environ["CUDA_VISIBLE_DEVICES"] = "5"
         os.environ["USER_CUDA_VISIBLE_DEVICES"] = "3,4,5,6"
@@ -71,21 +73,27 @@ def _convert_data_device(device: Union[str, int]) -> str:
 
 
 def paddle_to(
-    data: 'paddle.Tensor', device: Union[str, int,
-                                         'paddle.fluid.core_avx.Place',
-                                         'paddle.CPUPlace', 'paddle.CUDAPlace']
+    data: 'paddle.Tensor', device: Union[str, int, 'paddle.CPUPlace',
+                                         'paddle.CUDAPlace']
 ) -> 'paddle.Tensor':
-    r"""将 ``data`` 迁移到指定的 ``device`` 上。:class:`paddle.Tensor` 没有类似
-    :meth:`torch.Tensor.to` 的函数来迁移张量，因此该函数只是集成了 :func:`paddle.
-    Tensor.cpu` 和 :func:`paddle.Tensor.cuda` 两个函数。
+    r"""将 ``data`` 迁移到指定的 ``device`` 上。
+
+    :class:`paddle.Tensor` 没有类似:meth:`torch.Tensor.to` 的函数来迁移张量，因此
+    该函数只是集成了 :func:`paddle.Tensor.cpu` 和 :func:`paddle.Tensor.cuda` 两
+    个函数。
 
     :param data: 要迁移的张量；
     :param device: 目标设备，可以是 ``str`` 或 ``int`` 及 **paddle** 自己的
-        :class:`paddle.fluid.core_avx.Place`、:class:`paddle.CPUPlace` 和
-        :class:`paddle.CUDAPlace` 类型；
+        :class:`paddle.CPUPlace` 、:class:`paddle.CUDAPlace` 类型；
     :return: 迁移后的张量；
     """
-    if isinstance(device, paddle.fluid.core_avx.Place):
+    if _compare_version('paddle', operator.lt, '2.4.0'):
+        place_class = paddle.fluid.core_avx.Place
+    else:
+        # 2.4.1 起 Place 位置发生变化
+        # TODO 对 Place 的判断是否还有必要？
+        place_class = paddle.fluid.libpaddle.Place
+    if isinstance(device, place_class):
         if device.is_cpu_place():
             return data.cpu()
         else:
@@ -177,7 +185,7 @@ def is_in_paddle_dist() -> bool:
 
 
 def is_in_fnlp_paddle_dist() -> bool:
-    """判断是否处于 **fastNLP** 拉起的 **paddle** 分布式进程中."""
+    """判断是否处于 **fastNLP** 拉起的 **paddle** 分布式进程中。"""
     return FASTNLP_DISTRIBUTED_CHECK in os.environ
 
 
@@ -188,7 +196,7 @@ def is_in_paddle_launch_dist() -> bool:
 
 
 def is_paddle_module(model) -> bool:
-    """判断传入的 ``model`` 是否是 :class:`paddle.nn.Layer` 类型.
+    """判断传入的 ``model`` 是否是 :class:`paddle.nn.Layer` 类型。
 
     :param model: 模型；
     :return: 当前模型是否为 ``paddle`` 的模型；

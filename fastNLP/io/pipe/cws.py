@@ -131,8 +131,9 @@ def _find_and_replace_digit_spans(line):
 
 class CWSPipe(Pipe):
     r"""
-    对 **CWS** 数据进行处理，处理之后 :class:`~fastNLP.core.DataSet` 中的内容如
-    下：
+    处理 **CWS** 数据的 **Pipe**。
+
+    处理之后 :class:`~fastNLP.core.DataSet` 中的内容如下：
 
     .. csv-table::
        :header: "raw_words", "chars", "target", "seq_len"
@@ -144,7 +145,7 @@ class CWSPipe(Pipe):
     :param dataset_name: data 的名称，支持 ``['pku', 'msra', 'cityu'(繁体),
         'as'(繁体), None]``
     :param encoding_type: ``target`` 列使用什么类型的 encoding 方式，支持
-        ``['bmes', 'segapp']`` 两种。``"我 来自 复旦大学..."`` 这句话 ``bmes``的
+        ``['bmes', 'segapp']`` 两种。``"我 来自 复旦大学..."`` 这句话 ``bmes`` 的
         tag 为 ``[S, B, E, B, M, M, E...]``；``segapp`` 的 tag 为 ``[seg, app,
         seg, app, app, app, seg, ...]``。
     :param replace_num_alpha: 是否将数字和字母用特殊字符替换。
@@ -309,7 +310,7 @@ class CWSPipe(Pipe):
     def process_from_file(self, paths=None) -> DataBundle:
         r"""
         传入文件路径，生成处理好的 :class:`~fastNLP.io.DataBundle` 对象。
-        ``paths`` 支持的路径形式可以参考 :meth:`fastNLP.io.Loader.load`
+        ``paths`` 支持的路径形式可以参考 :meth:`.Loader.load`
 
         :param paths:
         :return:

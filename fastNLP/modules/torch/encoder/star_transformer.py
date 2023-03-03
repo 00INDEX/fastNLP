@@ -56,13 +56,14 @@ class StarTransformer(nn.Module):
 
     def forward(self, data: torch.FloatTensor, mask: torch.ByteTensor):
         r"""
+
         :param data: 输入序列，形状为 ``[batch_size, length, hidden]``。
         :param mask: 输入序列的 padding mask，形状为 ``[batch_size, length]``，
             为 **0** 的地方为 padding。
         :return: 返回一个元组。
             第一个元素形状为 ``[batch_size, length, hidden]``，代表编码后的输出序
             列；
-            第二个元素形状为 ``[batch_size, hidden]``，表示全局 relay 节点, 详见论
+            第二个元素形状为 ``[batch_size, hidden]``，表示全局 relay 节点，详见论
             文。
         """
 
